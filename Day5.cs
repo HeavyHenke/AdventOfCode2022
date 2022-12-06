@@ -35,7 +35,7 @@ class Day5
         var lines = File.ReadAllLines("Day5.txt");
 
         var stacks = lines.TakeWhile(l => !string.IsNullOrEmpty(l))
-            .Select(l => l.Batch(4).Select(b => b.ToList()).TakeWhile(w => w.Count >= 2).Select(q => q[1]))
+            .Select(l => l.Batch(4).Select(b => b.ToList()).Select(q => q[1]))
             .Transpose()
             .Select(l => new Stack<char>(l.Where(char.IsUpper).Reverse()))
             .ToArray();
