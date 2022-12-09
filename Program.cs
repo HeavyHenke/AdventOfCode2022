@@ -4,7 +4,7 @@
 using AdventOfCode2022;
 
 DateTime start = DateTime.Now;
-string result = new Day8().B()?.ToString() ?? " ";
+string result = new Day9().B()?.ToString() ?? " ";
 DateTime stop = DateTime.Now;
 
 Console.WriteLine("It took " + (stop - start).TotalSeconds);
