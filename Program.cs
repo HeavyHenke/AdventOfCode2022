@@ -1,21 +1,17 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using AdventOfCode2022;
 
 DateTime start = DateTime.Now;
-string result = new Day11().A()?.ToString() ?? " ";
+string result = new Day11().B()?.ToString() ?? " ";
 DateTime stop = DateTime.Now;
 
 Console.WriteLine("It took " + (stop - start).TotalSeconds);
 
 WindowsClipboard.SetText(result);
 Console.WriteLine(result);
-
-class Day11
-{
-    public object A()
-    {
-        return 0;
-    }
-}
