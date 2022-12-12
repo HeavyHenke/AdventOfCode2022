@@ -8,7 +8,7 @@ using System.Linq;
 using AdventOfCode2022;
 
 DateTime start = DateTime.Now;
-string result = new Day11().B()?.ToString() ?? " ";
+string result = new Day12().B()?.ToString() ?? " ";
 DateTime stop = DateTime.Now;
 
 Console.WriteLine("It took " + (stop - start).TotalSeconds);
