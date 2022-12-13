@@ -2,13 +2,18 @@
 
 
 using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Unicode;
 using AdventOfCode2022;
 
 DateTime start = DateTime.Now;
-string result = new Day12().B()?.ToString() ?? " ";
+string result = new Day13().B()?.ToString() ?? " ";
 DateTime stop = DateTime.Now;
 
 Console.WriteLine("It took " + (stop - start).TotalSeconds);

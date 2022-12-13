@@ -66,7 +66,7 @@ class Day11
             }
         }
 
-        public void AddItem(int item)
+        private void AddItem(int item)
         {
             _items.Enqueue(item);
         }
