@@ -1,4 +1,5 @@
-﻿class Day17
+﻿
+class Day17
 {
     public object A()
     {
@@ -17,7 +18,7 @@
         int gasIx = 0;
 
 
-        for (long i = 0; i < 2022; i++)
+        for (int i = 0; i < 2022; i++)
         {
             var fallingRock = shapes[shapeIx++].Select(r => (r.x, r.y + highestPoint + 4)).ToArray();
             if (shapeIx >= shapes.Length)
