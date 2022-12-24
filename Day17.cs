@@ -1,4 +1,6 @@
 ﻿
+using System.Numerics;
+
 class Day17
 {
     public object A()
@@ -58,7 +60,7 @@ class Day17
     
     public object B()
     {
-        var movement = File.ReadAllText("Day17_test.txt");
+        var movement = File.ReadAllText("Day17.txt");
 
         var map = new List<byte>();
         int highestPoint = -1;
@@ -71,26 +73,17 @@ class Day17
         var shapes = new[] { shape1, shape2, shape3, shape4, shape5 };
         int shapeIx = 0;
         int gasIx = 0;
-        int purgedRows = 0;
-
-
-        var lastMapAtGas1 = map.ToList();
-        var lastIxAtGat1 = 0;
-
-        // 19,5 dagar
-        //                   1000000000000
-        for (long i = 0; i < 2022; i++)
+        long purgedRows = 0;
+        var mapAtLastGas0 = new Dictionary<BigInteger, (long i, long totalHeight)>();
+        
+        const long numRepeats = 1000000000000;
+        for (long i = 0; i < numRepeats; i++)
         {
             var rockPos = highestPoint + 4;
             var fallingRock = shapes[shapeIx++].ToArray();
             if (shapeIx >= shapes.Length)
             {
                 shapeIx = 0;
-                if (gasIx == 0 && map.Count == lastMapAtGas1.Count && map.SequenceEqual(lastMapAtGas1))
-                {
-                    Console.WriteLine("Samma!")
-                    ;
-                }
             }
 
             while (true)
@@ -100,6 +93,22 @@ class Day17
                 if (gasIx >= movement.Length)
                 {
                     gasIx = 0;
+
+                    var mapAsBig = new BigInteger(map.Concat(fallingRock).ToArray());
+                    if(mapAtLastGas0.TryAdd(mapAsBig, (i, purgedRows + highestPoint + 1)) == false)
+                    {
+                        var inDict = mapAtLastGas0[mapAsBig];
+                        var periodPieces = i - inDict.i;
+                        var periodHeight = purgedRows + highestPoint + 1 - inDict.totalHeight;
+                        
+                        var left = numRepeats - i;
+                        var repeatsLeft = left / periodPieces;
+
+                        i += repeatsLeft * periodPieces;
+                        purgedRows += repeatsLeft * periodHeight;
+                        
+                        Console.WriteLine($"Used repeating patterns {repeatsLeft}");
+                    }
                 }
 
                 // Can be pushed?
@@ -155,7 +164,8 @@ class Day17
                         map[mapY] |= fallingRock[rocki];
                         highestPoint = Math.Max(highestPoint, mapY);
 
-                        if (map[mapY] == 0x7F)  // Purge on full line
+                        var line = map[mapY];
+                        if (line == 0x7F)  // Purge on full line
                         {
                             var rowsToRemove = mapY + 1;
                             purgedRows += rowsToRemove;
