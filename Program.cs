@@ -12,20 +12,13 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using AdventOfCode2022;
+using MoreLinq;
 
 DateTime start = DateTime.Now;
-string result = new Day19().B()?.ToString() ?? " ";
+string result = new Day20().B()?.ToString() ?? " ";
 DateTime stop = DateTime.Now;
 
 Console.WriteLine("It took " + (stop - start).TotalSeconds);
 
 WindowsClipboard.SetText(result);
 Console.WriteLine(result);
-
-class Day20
-{
-    public object A()
-    {
-        return 0;
-    }
-}
