@@ -39,6 +39,7 @@ class Day19
                 geodBotObsidianCost: byte.Parse(m.Groups["geodBotObsidianCost"].Value)));
 
         int result = data.Take(3)
+            .AsParallel()
             .Select(d => CalcMostObsidianByBluePrint(d, 32))
             .Aggregate(1, (a, b) => a * b);
 
@@ -51,6 +52,9 @@ class Day19
         var searchTree = new Stack<(byte oreBots, byte clayBots, byte obsidianBots, byte geoidBots, byte ores, byte clays, byte obsidians, byte geoids, byte time)>();
         searchTree.Push(state);
 
+        var maxOreCost = new[] { recepie.oreBotOreCost, recepie.clayBotOreCost, recepie.obsidianBotOreCost, recepie.geodeBotOreCost }.Max();
+        var minOreCost = new[] { recepie.oreBotOreCost, recepie.clayBotOreCost, recepie.obsidianBotOreCost, recepie.geodeBotOreCost }.Min();
+        
         int maxGeoidesMined = 0;
         var visitedAtTime = new Dictionary<(byte oreBots, byte clayBots, byte obsidianBots, byte geoidBots, byte ores, byte clays, byte obsidians, byte geoids), byte>();
 
@@ -75,11 +79,13 @@ class Day19
             int maxGeoidesForThiState = MaxCollectableGeoidesForState(nextState, recepie, timeLeft);
             if (maxGeoidesForThiState <= maxGeoidesMined)
                 continue; // cant be more efficient than best found so far
-
+            
             // Build robots
-            int botsBuildsAdded = 0;
+            int botsThatCanBeBuild = 0;
             if (state.ores >= recepie.geodeBotOreCost && state.obsidians >= recepie.geodBotObsidianCost)
             {
+                botsThatCanBeBuild++;
+
                 var s2 = nextState;
                 s2.ores -= recepie.geodeBotOreCost;
                 s2.obsidians -= recepie.geodBotObsidianCost;
@@ -90,57 +96,64 @@ class Day19
                     visitedAtTime[key] = s2.time;
                     searchTree.Push(s2);
                 }
-
-                botsBuildsAdded++;
             }
 
             if (state.ores >= recepie.obsidianBotOreCost && state.clays >= recepie.obsidianBotClayCost)
             {
-                var s2 = nextState;
-                s2.ores -= recepie.obsidianBotOreCost;
-                s2.clays -= recepie.obsidianBotClayCost;
-                s2.obsidianBots++;
-                var key = (s2.oreBots, s2.clayBots, s2.obsidianBots, s2.geoidBots, s2.ores, s2.clays, s2.obsidians, s2.geoids);
-                if (visitedAtTime.TryGetValue(key, out var visitedTime) == false || nextState.time < visitedTime)
-                {
-                    visitedAtTime[key] = s2.time;
-                    searchTree.Push(s2);
-                }
+                botsThatCanBeBuild++;
 
-                botsBuildsAdded++;
+                if (nextState.obsidianBots < recepie.geodBotObsidianCost && nextState.obsidians < timeLeft * recepie.geodBotObsidianCost && timeLeft >= 3)
+                {
+                    var s2 = nextState;
+                    s2.ores -= recepie.obsidianBotOreCost;
+                    s2.clays -= recepie.obsidianBotClayCost;
+                    s2.obsidianBots++;
+                    var key = (s2.oreBots, s2.clayBots, s2.obsidianBots, s2.geoidBots, s2.ores, s2.clays, s2.obsidians, s2.geoids);
+                    if (visitedAtTime.TryGetValue(key, out var visitedTime) == false || nextState.time < visitedTime)
+                    {
+                        visitedAtTime[key] = s2.time;
+                        searchTree.Push(s2);
+                    }
+                }
             }
 
-            if (state.ores >= recepie.clayBotOreCost && nextState.clays < timeLeft * recepie.obsidianBotClayCost && timeLeft >= 3)
+            if (state.ores >= recepie.clayBotOreCost)
             {
-                var s2 = nextState;
-                s2.ores -= recepie.clayBotOreCost;
-                s2.clayBots++;
-                var key = (s2.oreBots, s2.clayBots, s2.obsidianBots, s2.geoidBots, s2.ores, s2.clays, s2.obsidians, s2.geoids);
-                if (visitedAtTime.TryGetValue(key, out var visitedTime) == false || nextState.time < visitedTime)
-                {
-                    visitedAtTime[key] = s2.time;
-                    searchTree.Push(s2);
-                }
+                botsThatCanBeBuild++;
 
-                botsBuildsAdded++;
+                if (nextState.clays < timeLeft * recepie.obsidianBotClayCost && timeLeft >= 5 && nextState.clayBots < recepie.obsidianBotClayCost)
+                {
+                    var s2 = nextState;
+                    s2.ores -= recepie.clayBotOreCost;
+                    s2.clayBots++;
+                    var key = (s2.oreBots, s2.clayBots, s2.obsidianBots, s2.geoidBots, s2.ores, s2.clays, s2.obsidians, s2.geoids);
+                    if (visitedAtTime.TryGetValue(key, out var visitedTime) == false || nextState.time < visitedTime)
+                    {
+                        visitedAtTime[key] = s2.time;
+                        searchTree.Push(s2);
+                    }
+                }
             }
 
-            if (state.ores >= recepie.oreBotOreCost && timeLeft >= 3)
+            if (state.ores >= recepie.oreBotOreCost)
             {
-                var s2 = nextState;
-                s2.ores -= recepie.oreBotOreCost;
-                s2.oreBots++;
-                var key = (s2.oreBots, s2.clayBots, s2.obsidianBots, s2.geoidBots, s2.ores, s2.clays, s2.obsidians, s2.geoids);
-                if (visitedAtTime.TryGetValue(key, out var visitedTime) == false || nextState.time < visitedTime)
-                {
-                    visitedAtTime[key] = s2.time;
-                    searchTree.Push(s2);
-                }
+                botsThatCanBeBuild++;
 
-                botsBuildsAdded++;
+                if (timeLeft >= 5 && state.oreBots < maxOreCost && nextState.ores < timeLeft * minOreCost)
+                {
+                    var s2 = nextState;
+                    s2.ores -= recepie.oreBotOreCost;
+                    s2.oreBots++;
+                    var key = (s2.oreBots, s2.clayBots, s2.obsidianBots, s2.geoidBots, s2.ores, s2.clays, s2.obsidians, s2.geoids);
+                    if (visitedAtTime.TryGetValue(key, out var visitedTime) == false || nextState.time < visitedTime)
+                    {
+                        visitedAtTime[key] = s2.time;
+                        searchTree.Push(s2);
+                    }
+                }
             }
 
-            if (botsBuildsAdded < 4)
+            if (botsThatCanBeBuild < 4) // Dont do nothing if we can build all robot types
             {
                 var key = (nextState.oreBots, nextState.clayBots, nextState.obsidianBots, nextState.geoidBots, nextState.ores, nextState.clays, nextState.obsidians, nextState.geoids);
                 if (visitedAtTime.TryGetValue(key, out var visitedTime) == false || nextState.time < visitedTime)
@@ -154,7 +167,7 @@ class Day19
         Console.WriteLine($"BP {recepie.bpNum}: Found {maxGeoidesMined}, visited nodes " + visitedAtTime.Count);
         return maxGeoidesMined;
     }
-
+    
     private static int MaxCollectableGeoidesForState((int oreBots, int clayBots, int obsidianBots, int geoidBots, int ores, int clays, int obsidians, int geoids, int time) state, (int bpNum, int oreBotOreCost, int clayBotOreCost, int obsidianBotOreCost, int obsidianBotClayCost, int geodeBotOreCost, int geodBotObsidianCost) recepie, int timeLeft)
     {
         while (timeLeft >= 0)

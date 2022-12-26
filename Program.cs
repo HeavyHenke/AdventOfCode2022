@@ -21,3 +21,11 @@ Console.WriteLine("It took " + (stop - start).TotalSeconds);
 
 WindowsClipboard.SetText(result);
 Console.WriteLine(result);
+
+class Day20
+{
+    public object A()
+    {
+        return 0;
+    }
+}
