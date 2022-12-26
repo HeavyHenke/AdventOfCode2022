@@ -6,18 +6,18 @@ class Day19
     {
         var data = File.ReadLines("Day19.txt")
             .Select(l => Regex.Match(l, @"Blueprint (?<blueprint>\d+): Each ore robot costs (?<oreBotOreCost>\d+) ore. Each clay robot costs (?<clayBotOreCost>\d+) ore. Each obsidian robot costs (?<obsidianBotOreCost>\d+) ore and (?<obsidianBotClayCost>\d+) clay. Each geode robot costs (?<geodeBotOreCost>\d+) ore and (?<geodBotObsidianCost>\d+) obsidian."))
-            .Select(m => (bpNum: int.Parse(m.Groups["blueprint"].Value), 
-                oreBotOreCost: int.Parse(m.Groups["oreBotOreCost"].Value), 
-                clayBotOreCost: int.Parse(m.Groups["clayBotOreCost"].Value),
-                obsidianBotOreCost: int.Parse(m.Groups["obsidianBotOreCost"].Value),
-                obsidianBotClayCost: int.Parse(m.Groups["obsidianBotClayCost"].Value),
-                geodeBotOreCost: int.Parse(m.Groups["geodeBotOreCost"].Value),
-                geodBotObsidianCost: int.Parse(m.Groups["geodBotObsidianCost"].Value)));
+            .Select(m => (bpNum: byte.Parse(m.Groups["blueprint"].Value), 
+                oreBotOreCost: byte.Parse(m.Groups["oreBotOreCost"].Value), 
+                clayBotOreCost: byte.Parse(m.Groups["clayBotOreCost"].Value),
+                obsidianBotOreCost: byte.Parse(m.Groups["obsidianBotOreCost"].Value),
+                obsidianBotClayCost: byte.Parse(m.Groups["obsidianBotClayCost"].Value),
+                geodeBotOreCost: byte.Parse(m.Groups["geodeBotOreCost"].Value),
+                geodBotObsidianCost: byte.Parse(m.Groups["geodBotObsidianCost"].Value)));
         
         int result = 0;
         foreach (var bluePrint in data)
         {
-            int obsidian = CalcMostObsidianByBluePrint(bluePrint);
+            int obsidian = CalcMostObsidianByBluePrint(bluePrint, 24);
             Console.WriteLine($"BP {bluePrint.bpNum}: {obsidian}");
             result += obsidian * bluePrint.bpNum;
         }
@@ -26,18 +26,36 @@ class Day19
         return result;
     }
 
-    private int CalcMostObsidianByBluePrint((int bpNum, int oreBotOreCost, int clayBotOreCost, int obsidianBotOreCost, int obsidianBotClayCost, int geodeBotOreCost, int geodBotObsidianCost) recepie)
+    public object B()
     {
-        var state = (oreBots: 1, clayBots: 0, obsidianBots: 0, geoidBots: 0, ores: 0, clays: 0, obsidians: 0, geoids: 0, time: 0);
-        var searchTree = new Stack<(int oreBots, int clayBots, int obsidianBots, int geoidBots, int ores, int clays, int obsidians, int geoids, int time)>();
+        var data = File.ReadLines("Day19_test.txt")
+            .Select(l => Regex.Match(l, @"Blueprint (?<blueprint>\d+): Each ore robot costs (?<oreBotOreCost>\d+) ore. Each clay robot costs (?<clayBotOreCost>\d+) ore. Each obsidian robot costs (?<obsidianBotOreCost>\d+) ore and (?<obsidianBotClayCost>\d+) clay. Each geode robot costs (?<geodeBotOreCost>\d+) ore and (?<geodBotObsidianCost>\d+) obsidian."))
+            .Select(m => (bpNum: byte.Parse(m.Groups["blueprint"].Value), 
+                oreBotOreCost: byte.Parse(m.Groups["oreBotOreCost"].Value), 
+                clayBotOreCost: byte.Parse(m.Groups["clayBotOreCost"].Value),
+                obsidianBotOreCost: byte.Parse(m.Groups["obsidianBotOreCost"].Value),
+                obsidianBotClayCost: byte.Parse(m.Groups["obsidianBotClayCost"].Value),
+                geodeBotOreCost: byte.Parse(m.Groups["geodeBotOreCost"].Value),
+                geodBotObsidianCost: byte.Parse(m.Groups["geodBotObsidianCost"].Value)));
+
+        int result = data.Take(3)
+            .Select(d => CalcMostObsidianByBluePrint(d, 32))
+            .Aggregate(1, (a, b) => a * b);
+        
+        return result;
+    }
+
+    private int CalcMostObsidianByBluePrint((byte bpNum, byte oreBotOreCost, byte clayBotOreCost, byte obsidianBotOreCost, byte obsidianBotClayCost, byte geodeBotOreCost, byte geodBotObsidianCost) recepie, int maxTime)
+    {
+        var state = (oreBots: (byte)1, clayBots: (byte)0, obsidianBots: (byte)0, geoidBots: (byte)0, ores: (byte)0, clays: (byte)0, obsidians: (byte)0, geoids: (byte)0, time: (byte)0);
+        var searchTree = new Stack<(byte oreBots, byte clayBots, byte obsidianBots, byte geoidBots, byte ores, byte clays, byte obsidians, byte geoids, byte time)>();
         searchTree.Push(state);
         
         int maxGeoidesMined = 0;
-        long visitedNodes = 0;
+        var visited = new HashSet<(byte oreBots, byte clayBots, byte obsidianBots, byte geoidBots, byte ores, byte clays, byte obsidians, byte geoids, byte time)>();
         
         while (searchTree.Count > 0)
         {
-            visitedNodes++;
             state = searchTree.Pop();
             
             // Collect ores
@@ -50,10 +68,10 @@ class Day19
             
             if (nextState.geoids > maxGeoidesMined)
                 maxGeoidesMined = nextState.geoids;
-            if (nextState.time == 24)
+            if (nextState.time == maxTime)
                 continue;
             
-            int timeLeft = 24 - nextState.time;
+            int timeLeft = maxTime - nextState.time;
             int maxGeoidesForThiState = MaxCollectableGeoidesForState(nextState, recepie, timeLeft); //nextState.geoids + nextState.geoidBots * timeLeft + MaxBotsToAndCollectInTime(timeLeft);
             if(maxGeoidesForThiState <= maxGeoidesMined)
                 continue;   // cant be more efficient than best found so far
@@ -66,7 +84,8 @@ class Day19
                 s2.ores -= recepie.geodeBotOreCost;
                 s2.obsidians -= recepie.geodBotObsidianCost;
                 s2.geoidBots++;
-                searchTree.Push(s2);
+                if(visited.Add(s2))
+                    searchTree.Push(s2);
                 botsBuildsAdded++;
             }
             if(state.ores >= recepie.obsidianBotOreCost && state.clays >= recepie.obsidianBotClayCost)
@@ -75,7 +94,8 @@ class Day19
                 s2.ores -= recepie.obsidianBotOreCost;
                 s2.clays -= recepie.obsidianBotClayCost;
                 s2.obsidianBots++;
-                searchTree.Push(s2);
+                if(visited.Add(s2))
+                    searchTree.Push(s2);
                 botsBuildsAdded++;
             }
             if (state.ores >= recepie.clayBotOreCost && nextState.clays < timeLeft * recepie.obsidianBotClayCost && timeLeft >= 3)
@@ -91,15 +111,17 @@ class Day19
                 var s2 = nextState;
                 s2.ores -= recepie.oreBotOreCost;
                 s2.oreBots++;
-                searchTree.Push(s2);
+                if(visited.Add(s2))
+                    searchTree.Push(s2);
                 botsBuildsAdded++;
             }
 
             if(botsBuildsAdded < 4)
-                searchTree.Push(nextState); // Dont buy any bots and save for a more expensive one
+                if(visited.Add(nextState))
+                    searchTree.Push(nextState); // Dont buy any bots and save for a more expensive one
         }
 
-        Console.WriteLine("Visited nodes " +visitedNodes);
+        Console.WriteLine($"BP {recepie.bpNum}: Found {maxGeoidesMined}, visited nodes " + visited.Count);
         return maxGeoidesMined;
     }
 
