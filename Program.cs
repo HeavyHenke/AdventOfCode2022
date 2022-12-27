@@ -15,7 +15,7 @@ using AdventOfCode2022;
 using MoreLinq;
 
 DateTime start = DateTime.Now;
-string result = new Day21().B()?.ToString() ?? " ";
+string result = new Day22().A()?.ToString() ?? " ";
 DateTime stop = DateTime.Now;
 
 Console.WriteLine("It took " + (stop - start).TotalSeconds);

@@ -41,7 +41,6 @@ class Day15
             .Select(r => (x: r.sx, y: r.sy, manhattan: Math.Abs(r.bx-r.sx)+Math.Abs(r.by-r.sy), r.bx, r.by))
             .ToList();
         
-        int numImpossible = 0;
         for (int y = 0; y <= 4000000; y++)
         {
             // Console.WriteLine("Y: " + y);

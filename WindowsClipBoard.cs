@@ -106,7 +106,7 @@ namespace AdventOfCode2022
             }
         }
 
-        public static async Task<string?> GetTextAsync(CancellationToken cancellation)
+        public static async Task<string> GetTextAsync(CancellationToken cancellation)
         {
             if (!IsClipboardFormatAvailable(cfUnicodeText))
             {
@@ -118,7 +118,7 @@ namespace AdventOfCode2022
             return InnerGet();
         }
 
-        public static string? GetText()
+        public static string GetText()
         {
             if (!IsClipboardFormatAvailable(cfUnicodeText))
             {
@@ -130,7 +130,7 @@ namespace AdventOfCode2022
             return InnerGet();
         }
 
-        static string? InnerGet()
+        static string InnerGet()
         {
             IntPtr handle = default;
 
